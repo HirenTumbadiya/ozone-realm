@@ -1,0 +1,25 @@
+{
+  "name": "@ozone-realm/my-nest-app-e2e",
+  "version": "0.0.1",
+  "private": true,
+  "nx": {
+    "implicitDependencies": [
+      "@ozone-realm/my-nest-app"
+    ],
+    "targets": {
+      "e2e": {
+        "executor": "@nx/jest:jest",
+        "outputs": [
+          "{projectRoot}/test-output/jest/coverage"
+        ],
+        "options": {
+          "jestConfig": "apps/my-nest-app-e2e/jest.config.ts",
+          "passWithNoTests": true
+        },
+        "dependsOn": [
+          "@ozone-realm/my-nest-app:build"
+        ]
+      }
+    }
+  }
+}

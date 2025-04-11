@@ -8,6 +8,12 @@
     },
     {
       "path": "./apps/frontend"
+    },
+    {
+      "path": "./apps/my-nest-app-e2e"
+    },
+    {
+      "path": "./apps/my-nest-app"
     }
   ]
 }
