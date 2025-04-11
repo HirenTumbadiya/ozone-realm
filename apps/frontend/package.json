@@ -1,0 +1,13 @@
+{
+  "name": "@ozone-realm/frontend",
+  "version": "0.0.1",
+  "private": true,
+  "nx": {
+    "name": "frontend"
+  },
+  "dependencies": {
+    "next": "~15.2.4",
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
+  }
+}
