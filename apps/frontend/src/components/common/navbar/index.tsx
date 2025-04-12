@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import styles from './navbar.module.css';
 
 export default function Navbar() {
@@ -6,11 +7,20 @@ export default function Navbar() {
       <h1 className="text-6xl font-bold">OZONE-REALM</h1>
       <div className="flex gap-10 text-xl">
         <ul className="flex gap-10">
-          <ol className='animated_text'>HOME</ol>
-          <ol className='animated_text'>ABOUT</ol>
-          <ol className='animated_text'>MARKETPLACE</ol>
+          <ol className="animated_text">
+            <Link href={'#'}>HOME</Link>
+          </ol>
+          <ol className="animated_text">
+            <Link href={'/about'}>ABOUT</Link>
+          </ol>
+          <ol className="animated_text">
+            <Link href={'#'}>MARKETPLACE</Link>
+          </ol>
+          <ol className="animated_text">
+            <Link href={'#'}>DOCS</Link>
+          </ol>
         </ul>
-        <button className='animated_text'>LOGIN</button>
+        <button className="animated_text">LOGIN</button>
       </div>
     </nav>
   );
