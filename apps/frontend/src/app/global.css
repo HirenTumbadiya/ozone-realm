@@ -14,6 +14,7 @@
 body{
   background-color: var(--background-color);
   font-family: 'Black Sansa Thin', sans-serif;
+  color: white;
 }
 
 @font-face {
@@ -25,10 +26,20 @@ body{
 
 .hero-section {
   position: relative;
-  background-image: url("/images/heroImage.jpg");
+  background-image: url("/images/heroImage.jpg") ;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   height: 100vh;
   overflow: hidden;
+  mask-image: linear-gradient(rgba(0, 0, 0, 1) 70%, transparent);
 }
+
+.animated_text{
+  color: white;
+}
+
+.animated_text:hover{
+  color: red;
+}
+

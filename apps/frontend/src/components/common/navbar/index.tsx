@@ -6,11 +6,11 @@ export default function Navbar() {
       <h1 className="text-6xl font-bold">OZONE-REALM</h1>
       <div className="flex gap-10 text-xl">
         <ul className="flex gap-10">
-          <ol>HOME</ol>
-          <ol>ABOUT</ol>
-          <ol>MARKETPLACE</ol>
+          <ol className='animated_text'>HOME</ol>
+          <ol className='animated_text'>ABOUT</ol>
+          <ol className='animated_text'>MARKETPLACE</ol>
         </ul>
-        <button>LOGIN</button>
+        <button className='animated_text'>LOGIN</button>
       </div>
     </nav>
   );
