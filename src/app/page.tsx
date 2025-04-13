@@ -1,6 +1,6 @@
-import RobotRender from '@/components/home/robotRender';
+import RobotRender from "@/components/home/robotRender";
 
-export default function Index() {
+export default function Home() {
   return (
     <main className="text-white font-bold text-2xl">
       <section className="w-full h-full flex items-center hero-section md:p-28">
@@ -12,7 +12,9 @@ export default function Index() {
         </div>
       </section>
       <section className="w-full h-full md:p-28 text-white">
-        <div className='text-pretty text-6xl text-center pb-20'>🚀 Let the Games Begin</div>
+        <div className="text-pretty text-6xl text-center pb-20">
+          🚀 Let the Games Begin
+        </div>
         <div className="rounded-3xl border p-5 flex flex-col justify-between items-center w-full h-full">
           <div>
             <h2 className="font-extrabold text-5xl">Tic Tac Toe</h2>

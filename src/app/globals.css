@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 :root {
   --background-color: #0c0021;
@@ -9,24 +7,24 @@
 * {
   margin: 0;
   padding: 0;
+  font-family: "Black Sansa Thin", sans-serif;
 }
 
-body{
+body {
   background-color: var(--background-color);
-  font-family: 'Black Sansa Thin', sans-serif;
   color: white;
 }
 
 @font-face {
-  font-family: 'Black Sansa Thin';
-  src: url('/fonts/BlackSansaFree-Regular.otf') format('opentype');
+  font-family: "Black Sansa Thin";
+  src: url("/fonts/BlackSansaFree-Regular.otf") format("opentype");
   font-weight: normal;
   font-style: normal;
 }
 
 .hero-section {
   position: relative;
-  background-image: url("/images/heroImage.jpg") ;
+  background-image: url("/images/heroImage.jpg");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -35,11 +33,10 @@ body{
   mask-image: linear-gradient(rgba(0, 0, 0, 1) 70%, transparent);
 }
 
-.animated_text{
+.animated_text {
   color: white;
 }
 
-.animated_text:hover{
+.animated_text:hover {
   color: red;
 }
-

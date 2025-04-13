@@ -355,4 +355,4 @@ export function Model(props) {
   )
 }
 
-useGLTF.preload('/models.robot.glb')
+useGLTF.preload('/models/robot.glb')
