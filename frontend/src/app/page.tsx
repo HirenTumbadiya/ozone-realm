@@ -1,5 +1,3 @@
-import RobotRender from "@/components/home/robotRender";
-
 export default function Home() {
   return (
     <main className="text-white font-bold text-2xl">
@@ -7,9 +5,6 @@ export default function Home() {
         <h1 className="text-9xl md:max-w-5xl">
           Enter the Realm. Stay for the Game.
         </h1>
-        <div className="absolute h-screen w-screen">
-          <RobotRender />
-        </div>
       </section>
       <section className="w-full h-full md:p-28 text-white">
         <div className="text-pretty text-6xl text-center pb-20">
