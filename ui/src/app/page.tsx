@@ -2,6 +2,7 @@
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import gsap from "gsap";
+import CustomButton from "@/components/CustomButton";
 
 export default function Home() {
   const headingRef = useRef(null);
@@ -15,7 +16,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="relative overflow-x-hidden bg-gradient-to-b from-[#0f0f0f] to-[#1a1a1a] text-white">
+    <div className="relative overflow-x-hidden text-white">
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <motion.div
           initial={{ x: -50, y: 30, opacity: 0.2 }}
@@ -52,7 +53,7 @@ export default function Home() {
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 1 }}
-          className="text-6xl font-bold mb-6"
+          className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6"
         >
           Welcome to <span className="text-indigo-500">OZONE-REALM</span>
         </motion.h1>
@@ -61,28 +62,30 @@ export default function Home() {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.3, duration: 0.8 }}
-          className="text-xl max-w-xl mb-8"
+          className="text-lg sm:text-xl max-w-xl mb-8"
         >
           Challenge your friends or the AI. Experience TicTacToe like never
           before — fast, reactive, and stylish.
         </motion.p>
         <motion.div
-          className="flex gap-6"
+          className="flex flex-col sm:flex-row gap-6 items-center justify-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
         >
-          <button className="px-6 py-3 rounded-full bg-indigo-600 hover:bg-indigo-500 transition">
-            Play Now
+          <button
+            className="relative px-6 py-3 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold overflow-hidden transition group"
+          >
+            <span className="relative">Play Now</span>
+            <span className="absolute inset-0 bg-white opacity-10 scale-0 group-hover:scale-150 transition-transform duration-500 rounded-full"></span>
           </button>
-          <button className="px-6 py-3 rounded-full border border-white hover:bg-white hover:text-black transition">
-            Learn More
-          </button>
+
+          <CustomButton text="Learn More" />
         </motion.div>
       </div>
-      <section className="py-20 px-6 text-center bg-[#1a1a1a]">
-        <h2 className="text-4xl font-bold mb-6">How It Works</h2>
-        <div className="max-w-4xl mx-auto grid md:grid-cols-3 gap-10">
+      <section className="py-20 px-6 text-center">
+        <h2 className="text-3xl sm:text-4xl font-bold mb-6">How It Works</h2>
+        <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10">
           {[
             {
               title: "1. Choose Mode",
@@ -99,26 +102,27 @@ export default function Home() {
           ].map((step, i) => (
             <motion.div
               key={i}
-              className="bg-[#2a2a2a] p-6 rounded-lg shadow-lg"
+              className="p-6 rounded-lg shadow-lg"
               whileHover={{ scale: 1.05 }}
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.2 }}
             >
-              <h3 className="text-2xl font-semibold mb-2">{step.title}</h3>
-              <p>{step.desc}</p>
+              <h3 className="text-xl sm:text-2xl font-semibold mb-2">{step.title}</h3>
+              <p className="text-sm sm:text-base">{step.desc}</p>
             </motion.div>
           ))}
         </div>
       </section>
-      <section className="text-white text-center py-16 bg-black">
-        <h2 className="text-3xl font-bold mb-4">Ready to Tic-Tac-Win?</h2>
-        <p className="mb-8 text-gray-400">
+      <section className="text-white text-center py-16">
+        <h2 className="text-2xl sm:text-3xl font-bold mb-4">Ready to Tic-Tac-Win?</h2>
+        <p className="mb-8 text-gray-400 text-sm sm:text-base">
           Join the game and become the unbeatable legend.
         </p>
-        <button className="bg-indigo-600 hover:bg-indigo-500 transition px-8 py-3 rounded-full text-lg">
-          Let’s Play!
+        <button className="relative px-6 py-3 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold overflow-hidden transition group">
+          <span className="relative z-10">Let&apos;s Play!</span>
+          <span className="absolute inset-0 bg-white opacity-10 scale-0 group-hover:scale-150 transition-transform duration-500 rounded-full"></span>
         </button>
       </section>
     </div>
