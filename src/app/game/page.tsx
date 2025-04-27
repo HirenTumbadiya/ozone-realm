@@ -15,7 +15,6 @@ export default function Game() {
   });
 
   useEffect(() => {
-    // Extract query parameters from the searchParams object
     const mode = searchParams.get("mode");
     const size = searchParams.get("size") as BoardSize;
     const player = searchParams.get("player");
