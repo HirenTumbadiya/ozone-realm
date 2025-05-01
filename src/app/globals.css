@@ -1,12 +1,5 @@
 @import "tailwindcss";
 
-@font-face {
-  font-family: "Black Sansa Thin";
-  src: url("/fonts/BlackSansaFree-Regular.otf") format("opentype");
-  font-weight: normal;
-  font-style: normal;
-}
-
 body {
   background: #171717;
   color: #ededed;
@@ -15,13 +8,31 @@ body {
   margin: 0;
   padding: 0;
   cursor: none;
-  font-family: "Black Sansa Thin", sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-  -ms-text-size-adjust: 100%;
-  -webkit-tap-highlight-color: transparent;
-  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+body::-webkit-scrollbar {
+  width: 5px; /* vertical scrollbar */
+  height: 10px; /* horizontal scrollbar */
+}
+
+/* Scrollbar track */
+body::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+/* Scrollbar thumb (the part you drag) */
+body::-webkit-scrollbar-thumb {
+  background-color: #444;
+  border-radius: 5px;
+  border: 2px solid #1e1e1e; /* Optional: makes it look inset */
+}
+
+/* On hover */
+body::-webkit-scrollbar-thumb:hover {
+  background-color: #666;
 }
 
 input,
@@ -115,9 +126,19 @@ button {
 
 /* Staggered wave motion */
 @keyframes wave {
-  0%   { transform: translateY(0); }
-  25%  { transform: translateY(-6px); }
-  50%  { transform: translateY(0); }
-  75%  { transform: translateY(6px); }
-  100% { transform: translateY(0); }
+  0% {
+    transform: translateY(0);
+  }
+  25% {
+    transform: translateY(-6px);
+  }
+  50% {
+    transform: translateY(0);
+  }
+  75% {
+    transform: translateY(6px);
+  }
+  100% {
+    transform: translateY(0);
+  }
 }

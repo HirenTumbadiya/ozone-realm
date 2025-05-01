@@ -1,12 +1,15 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import gsap from "gsap";
 import CustomButton from "@/components/CustomButton";
-import GameModeModal from "@/components/Games/GameModeModal";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
+import GameModal from "@/components/Games/GameModal";
+import { GameMode } from "@/types/GamePiece";
 
 export default function Home() {
+  const { isSignedIn } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const headingRef = useRef(null);
   const router = useRouter();
@@ -19,12 +22,22 @@ export default function Home() {
     );
   }, []);
 
-  const handleConfirm = (mode: string, size: string) => {
-    // const playerType = isAuthenticated ? "auth" : "guest";
-    const playerType = "guest";
-
+  const handleModeSelect = (mode: GameMode) => {
     setIsModalOpen(false);
-    router.push(`/game?mode=${mode}&size=${size}&player=${playerType}`);
+    switch (mode) {
+      case GameMode.LOCAL_PLAYER:
+        router.push("/game/local");
+        break;
+      case GameMode.COMPUTER:
+        router.push("/game/computer");
+        break;
+      case GameMode.ONLINE_PLAYER:
+        router.push("/game/random");
+        break;
+      case GameMode.INVITE_PLAYER:
+        router.push("/game/invite");
+        break;
+    }
   };
 
   return (
@@ -145,11 +158,12 @@ export default function Home() {
         </section>
       </div>
 
-      <GameModeModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onConfirm={handleConfirm}
-      />
+      {isModalOpen && (
+        <GameModal
+          onSelect={handleModeSelect}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
     </>
   );
 }

@@ -1,8 +1,10 @@
 "use client";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 
 export default function GridLayout({ children }: { children: React.ReactNode }) {
   const gridRef = useRef<HTMLDivElement | null>(null);
+  const pathname = usePathname();
 
   useEffect(() => {
     const grid = gridRef.current;
@@ -54,7 +56,7 @@ export default function GridLayout({ children }: { children: React.ReactNode }) 
       window.removeEventListener("mousemove", handleMouseMove);
       clearInterval(fadeInterval);
     };
-  }, []);
+  }, [pathname]);
   
 
   return (
