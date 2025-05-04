@@ -20,6 +20,7 @@ export class GameMoveHandler {
   }
 
   handleMove(io: Server, socket: Socket, roomId: string, cellIndex: number) {
+    console.log("handlemove");
     const game = this.gameStates[roomId];
     if (!game || game.isGameOver) return;
 
@@ -52,10 +53,22 @@ export class GameMoveHandler {
       game.currentPlayer = game.players.find((id) => id !== socket.id)!;
     }
 
-    // Emit updated state
+    // Format board to 2D array
+    const board2D = [
+      game.board.slice(0, 3),
+      game.board.slice(3, 6),
+      game.board.slice(6, 9),
+    ];
+
+    console.log(board2D)
     io.to(roomId).emit("game_update", {
-      board: game.board,
-      currentPlayer: game.currentPlayer,
+      board: board2D,
+      playerTurn: game.currentPlayer,
+      winner: game.isGameOver ? winner : null,
+      players: {
+        [game.players[0]]: "X",
+        [game.players[1]]: "O",
+      },
     });
   }
 

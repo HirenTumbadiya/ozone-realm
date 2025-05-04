@@ -18,36 +18,41 @@ export default function Page() {
   const { roomId } = useParams();
   const [opponentConnected, setOpponentConnected] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
+  const [socketId, setSocketId] = useState<string | undefined>();
   interface GameState {
     playerTurn: string;
     board: CellState[][];
     winner?: string;
+    players: {
+      [socketId: string]: "X" | "O";
+    };
   }
 
   const [gameState, setGameState] = useState<GameState>({
     board: Array.from({ length: 3 }, () => Array(3).fill(CellState.EMPTY)),
     playerTurn: "X",
     winner: undefined,
+    players: {},
   });
-  useEffect(() => {
-    console.log("🧩 Current gameState:", gameState, roomId);
-  }, [gameState, roomId]);
 
   useEffect(() => {
     if (roomId) {
       socket = io("http://localhost:8080");
-      socket.emit("join_room", roomId);
+
+      socket.on("connect", () => {
+        socket.emit("join_room", roomId);
+      });
+
       socket.on("opponent_connected", () => {
-        console.log("Opponent connected event received ✅");
         setOpponentConnected(true);
       });
 
-      socket.on("start_game", () => {
+      socket.on("start_game", (initialGameState) => {
+        setGameState(initialGameState);
         setGameStarted(true);
       });
 
       socket.on("game_update", (newGameState) => {
-        console.log("📦 Received game_update:", newGameState);
         setGameState(newGameState);
       });
 
@@ -66,6 +71,20 @@ export default function Page() {
     }
   };
 
+  const handlePlayerMove = (row: number, col: number) => {
+    const index = row * 3 + col; // Convert to 1D index
+    socket.emit("game_move", roomId, index);
+  };
+
+  useEffect(() => {
+    if (socket?.id) {
+      setSocketId(socket?.id);
+    }
+  }, []);
+
+  console.log(gameState, socket?.id);
+  console.log(socketId)
+
   return (
     <section className="h-screen w-full grid grid-rows-[auto_1fr_auto] px-4 py-2">
       <header className="text-center">
@@ -74,7 +93,9 @@ export default function Page() {
         </h1>
       </header>
       <main className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center justify-items-center h-full">
-        <div className="w-full max-w-[200px] aspect-video bg-black rounded-md relative shadow-md">
+        <div
+          className={`w-full max-w-[200px] aspect-video bg-black rounded-md relative shadow-md ${socketId && socketId != gameState?.playerTurn ? `border-2 border-pink-700 animate-pulse` : ``}`}
+        >
           <span className="absolute bottom-1 left-2 text-white text-xs">
             {opponentConnected ? "Opponent Connected" : "Waiting..."}
           </span>
@@ -83,12 +104,15 @@ export default function Page() {
           {gameState && (
             <GameBoard
               gameState={gameState}
-              roomId={roomId as string}
               gameStarted={gameStarted}
+              onMove={handlePlayerMove}
+              socketId={socketId}
             />
           )}
         </div>
-        <div className="w-full max-w-[200px] aspect-video bg-gray-800 rounded-md relative shadow-md">
+        <div
+          className={`w-full max-w-[200px] aspect-video bg-gray-800 rounded-md relative shadow-md ${socketId && socketId == gameState?.playerTurn ? `border-2 border-pink-700 animate-pulse` : ``}`}
+        >
           <span className="absolute bottom-1 left-2 text-white text-xs">
             You
           </span>

@@ -30,7 +30,6 @@ io.use((socket: any, next) => {
 io.on("connection", (socket: any) => {
   socket.on("create_room", (roomId: string) => {
     gameRoomManager.createRoom(roomId, socket);
-    console.log(`Room ${roomId} created`);
   });
 
   socket.on("join_room", (roomId: string) => {
@@ -52,18 +51,33 @@ io.on("connection", (socket: any) => {
   // below code is to update the initial state wtih empty boxes
 
   socket.on("start_game", ({ roomId }: { roomId: string }) => {
+    const room = gameRoomManager.getRoom(roomId);
+    if (!room || room.length !== 2) return;
+    const [player1, player2] = room;
+
+    const startingPlayerSymbol = Math.random() < 0.5 ? "X" : "O";
+    const otherPlayerSymbol = startingPlayerSymbol === "X" ? "O" : "X";
+
+    const playerAssignments = {
+      [player1.id]: startingPlayerSymbol,
+      [player2.id]: otherPlayerSymbol,
+    };
+    const startingPlayerId =
+      startingPlayerSymbol === "X" ? player1.id : player2.id;
+
     const initialGameState = {
       board: Array(3)
         .fill("")
         .map(() => Array(3).fill("")),
-      playerTurn: "X",
+      playerTurn: startingPlayerId,
       winner: null,
+      players: playerAssignments,
     };
-    io.to(roomId).emit("start_game");
-    io.to(roomId).emit("game_update", initialGameState);
+    io.to(roomId).emit("start_game", initialGameState);
   });
 
   socket.on("game_move", (roomId: string, cellIndex: number) => {
+    console.log(roomId, cellIndex);
     gameMoveHandler.handleMove(io, socket, roomId, cellIndex);
   });
 

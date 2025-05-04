@@ -21,15 +21,12 @@ export class GameRoomManager {
   }
 
   joinRoom(socket: any, roomId: string): Player[] | null {
-    console.log(socket?.user, roomId);
     if (!this.gameRooms[roomId]) {
         this.gameRooms[roomId] = [];
-        console.log(`Room ${roomId} auto-created on join`);
       }
 
       
     const room = this.gameRooms[roomId];
-    console.log("room", room)
     if (room && room.length < 2) {
       const player: Player = {
         id: socket.id,
@@ -37,7 +34,6 @@ export class GameRoomManager {
         userId:
           socket.user?.userId || `user_${Math.floor(Math.random() * 1000)}`,
       };
-      console.log(player, "roomplayer")
       room.push(player);
       socket.join(roomId);
       socket.emit("message", `Joined room: ${roomId}`);
@@ -49,6 +45,10 @@ export class GameRoomManager {
       socket.emit("message", "Room is full or does not exist");
     }
     return null;
+  }
+
+  getRoom(roomId: string) {
+    return this.gameRooms[roomId];
   }
 
   removePlayer(socket: any) {
