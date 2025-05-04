@@ -1,5 +1,5 @@
 "use client";
-import GameBoard from "@/components/Games/GameBoard";
+// import GameBoard from "@/components/Games/GameBoard";
 import { useSocket } from "@/hooks/useSocket";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -43,7 +43,7 @@ export default function Page() {
 
         {/* Game Board */}
         <div className="w-full max-w-[250px] aspect-square flex items-center justify-center">
-          <GameBoard />
+          {/* <GameBoard /> */}
         </div>
 
         {/* Your Video */}

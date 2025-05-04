@@ -4,12 +4,12 @@ import { motion } from "motion/react";
 import gsap from "gsap";
 import CustomButton from "@/components/CustomButton";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@clerk/nextjs";
+// import { useAuth } from "@clerk/nextjs";
 import GameModal from "@/components/Games/GameModal";
 import { GameMode } from "@/types/GamePiece";
 
 export default function Home() {
-  const { isSignedIn } = useAuth();
+  // const { isSignedIn } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const headingRef = useRef(null);
   const router = useRouter();

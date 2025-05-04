@@ -1,20 +1,49 @@
 "use client";
-import { useState } from "react";
-import { motion } from "motion/react";
-
+import { useEffect, useState } from "react";
+import { Socket } from "socket.io-client";
 enum CellState {
   EMPTY = "",
   X = "X",
   O = "O",
 }
 
-export default function GameBoard() {
+interface GameState {
+  playerTurn: string;
+  board: CellState[][];
+  winner?: string;
+}
+
+type Props = {
+  gameState: GameState;
+  roomId: string;
+  gameStarted: boolean;
+};
+
+import io from "socket.io-client";
+const socket: Socket = io(); // Initialize the socket connection
+
+export default function GameBoard({ gameState, roomId, gameStarted }: Props) {
   const [board, setBoard] = useState<CellState[][]>(
     Array.from({ length: 3 }, () => Array(3).fill(CellState.EMPTY))
   );
   const [currentPlayer, setCurrentPlayer] = useState<CellState>(CellState.X);
   const [winner, setWinner] = useState<CellState>(CellState.EMPTY);
   const [winningCells, setWinningCells] = useState<number[]>([]);
+
+  useEffect(() => {
+    socket.on("game_update", (newGameState: GameState) => {
+      // Update the local state with the new game state received from the server
+      setBoard(newGameState.board);
+      setCurrentPlayer(newGameState.playerTurn as CellState);
+      setWinner((newGameState.winner as CellState) || CellState.EMPTY);
+      setWinningCells([]);
+    });
+
+    return () => {
+      // Cleanup the event listener when the component unmounts
+      socket.off("game_update");
+    };
+  }, []);
 
   const checkWinner = (board: CellState[][]) => {
     for (let i = 0; i < 3; i++) {
@@ -63,16 +92,40 @@ export default function GameBoard() {
     }
   };
 
+  // const handleCellClick = (row: number, col: number) => {
+  //   if (gameStarted && !winner) {
+  //     if (board[row][col] === CellState.EMPTY && currentPlayer === gameState.playerTurn) {
+  //       // Update the local board
+  //       const newBoard = board.map((r, i) =>
+  //         r.map((cell, j) => (i === row && j === col ? currentPlayer : cell))
+  //       );
+  //       setBoard(newBoard);
+  //       checkWinner(newBoard);
+
+  //       // Emit the move to the server
+  //       // Send the updated board to the server through socket
+  //       socket.emit("game_move", roomId, row * 3 + col);
+  //     }
+  //   } else {
+  //     console.log("Game not started or already finished.");
+  //   }
+  // };
+
   const handleCellClick = (row: number, col: number) => {
-    if (board[row][col] === CellState.EMPTY && !winner) {
-      const newBoard = board.map((r, i) =>
-        r.map((cell, j) => (i === row && j === col ? currentPlayer : cell))
-      );
-      setBoard(newBoard);
-      checkWinner(newBoard);
-      setCurrentPlayer(
-        currentPlayer === CellState.X ? CellState.O : CellState.X
-      );
+    if (gameStarted && !winner && board[row][col] === CellState.EMPTY) {
+      if (currentPlayer === gameState.playerTurn) {
+        // Update the local board
+        const newBoard = board.map((r, i) =>
+          r.map((cell, j) => (i === row && j === col ? currentPlayer : cell))
+        );
+        setBoard(newBoard);
+        checkWinner(newBoard);
+
+        // Emit the move to the server
+        socket.emit("game_move", roomId, { row, col, player: currentPlayer });
+      }
+    } else {
+      console.log("Game not started or already finished.");
     }
   };
 
@@ -185,10 +238,14 @@ export default function GameBoard() {
                 key={idx}
                 onClick={() => handleCellClick(rowIndex, colIndex)}
                 className={`aspect-square w-full h-full rounded-lg shadow-md flex items-center justify-center text-3xl md:text-5xl font-bold cursor-pointer transition-transform hover:scale-105 ${
-                  isWinning
-                    ? "bg-indigo-500 text-white"
-                    : "bg-white text-indigo-800"
-                }`}
+                  gameStarted
+                    ? `${
+                        isWinning
+                          ? "bg-indigo-500 text-white"
+                          : "bg-white text-indigo-800"
+                      }`
+                    : `bg-gray-400`
+                } `}
               >
                 {cell}
               </div>

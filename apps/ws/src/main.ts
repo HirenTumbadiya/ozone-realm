@@ -1,10 +1,8 @@
 import { Server } from "socket.io";
 import http from "http";
-import { verifyToken } from "@clerk/express";
 import dotenv from "dotenv";
-import { GameRoomManager } from "./game/gameRoomHandler";
-import { GameMoveHandler } from "./game/gameRoomManager";
-import { authenticateUser } from "./auth/authMiddleware";
+import { GameMoveHandler } from "./game/gameRoomHandler";
+import { GameRoomManager } from "./game/gameRoomManager";
 
 // Load env variables
 dotenv.config();
@@ -23,29 +21,55 @@ const io = new Server(server, {
 const gameRoomManager = new GameRoomManager();
 const gameMoveHandler = new GameMoveHandler();
 
-io.use(authenticateUser);
+io.use((socket: any, next) => {
+  const mockUserId = `user_${Math.floor(Math.random() * 10000)}`;
+  socket.user = { userId: mockUserId };
+  next();
+});
 
 io.on("connection", (socket: any) => {
-  console.log("A client connected!", socket.user?.userId);
-
-  // Send a welcome message to the connected user
-  socket.emit("message", "Welcome to the game server!");
-
-  // Handle the user joining a game
-  socket.on("join_game", () => {
-    const roomId = gameRoomManager.joinRoom(socket);
-    console.log(`${socket.user?.userId} joined room: ${roomId}`);
+  socket.on("create_room", (roomId: string) => {
+    gameRoomManager.createRoom(roomId, socket);
+    console.log(`Room ${roomId} created`);
   });
 
-  // Handle a player's move
-  socket.on("game_move", (roomId: any, moveData: any) => {
-    gameMoveHandler.handleMove(socket, roomId, moveData);
+  socket.on("join_room", (roomId: string) => {
+    const players = gameRoomManager.joinRoom(socket, roomId);
+
+    if (players && players.length === 2) {
+      io.to(roomId).emit("opponent_connected");
+      gameMoveHandler.initializeGame(
+        roomId,
+        players.map((player) => player.id)
+      );
+      io.to(roomId).emit("message", "Game ready to start!");
+    }
   });
 
-  // Handle user disconnect
+  // socket.on("start_game", ({ roomId }: { roomId: string }) => {
+  //   io.to(roomId).emit("start_game");
+  // });
+  // below code is to update the initial state wtih empty boxes
+
+  socket.on("start_game", ({ roomId }: { roomId: string }) => {
+    const initialGameState = {
+      board: Array(3)
+        .fill("")
+        .map(() => Array(3).fill("")),
+      playerTurn: "X",
+      winner: null,
+    };
+    io.to(roomId).emit("start_game");
+    io.to(roomId).emit("game_update", initialGameState);
+  });
+
+  socket.on("game_move", (roomId: string, cellIndex: number) => {
+    gameMoveHandler.handleMove(io, socket, roomId, cellIndex);
+  });
+
   socket.on("disconnect", () => {
-    console.log(`User ${socket.user?.userId} disconnected`);
     gameRoomManager.removePlayer(socket);
+    gameMoveHandler.cleanupRoomOfPlayer(socket.id); // Optional: implement this
   });
 });
 

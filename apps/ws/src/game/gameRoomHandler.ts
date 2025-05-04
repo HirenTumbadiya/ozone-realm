@@ -1,63 +1,103 @@
-import { Socket } from "socket.io";
+import { Server, Socket } from "socket.io";
 
-interface GameRooms {
-  [key: string]: string[];
+interface GameState {
+  board: string[];
+  currentPlayer: string;
+  players: string[];
+  isGameOver: boolean;
 }
 
-export class GameRoomManager {
-  private gameRooms: GameRooms;
+export class GameMoveHandler {
+  private gameStates: Record<string, GameState> = {};
 
-  constructor() {
-    this.gameRooms = {};
+  initializeGame(roomId: string, players: string[]) {
+    this.gameStates[roomId] = {
+      board: Array(9).fill(""),
+      currentPlayer: players[0],
+      players,
+      isGameOver: false,
+    };
   }
 
-  // Try to join an existing room or create a new one
-  public joinRoom(socket: Socket): string {
-    let assignedRoom = this.findAvailableRoom();
+  handleMove(io: Server, socket: Socket, roomId: string, cellIndex: number) {
+    const game = this.gameStates[roomId];
+    if (!game || game.isGameOver) return;
 
-    if (assignedRoom) {
-      this.addPlayerToRoom(assignedRoom, socket);
-      return assignedRoom;
-    } else {
-      const newRoomId = this.createNewRoom(socket);
-      return newRoomId;
+    const playerSymbol = this.getPlayerSymbol(game, socket.id);
+    if (!playerSymbol) return;
+
+    if (socket.id !== game.currentPlayer) {
+      socket.emit("error", "Not your turn");
+      return;
     }
+
+    if (game.board[cellIndex] !== "") {
+      socket.emit("error", "Cell already occupied");
+      return;
+    }
+
+    // Apply move
+    game.board[cellIndex] = playerSymbol;
+
+    // Check for win or draw
+    const winner = this.checkWinner(game.board);
+    if (winner) {
+      game.isGameOver = true;
+      io.to(roomId).emit("game_over", { winner: playerSymbol });
+    } else if (game.board.every((cell) => cell !== "")) {
+      game.isGameOver = true;
+      io.to(roomId).emit("game_over", { winner: null }); // Draw
+    } else {
+      // Switch turn
+      game.currentPlayer = game.players.find((id) => id !== socket.id)!;
+    }
+
+    // Emit updated state
+    io.to(roomId).emit("game_update", {
+      board: game.board,
+      currentPlayer: game.currentPlayer,
+    });
   }
 
-  private findAvailableRoom(): string | null {
-    for (let roomId in this.gameRooms) {
-      if (this.gameRooms[roomId].length < 2) {
-        return roomId;
+  private getPlayerSymbol(game: GameState, socketId: string): string | null {
+    const index = game.players.indexOf(socketId);
+    return index === 0 ? "X" : index === 1 ? "O" : null;
+  }
+
+  private checkWinner(board: string[]): string | null {
+    const winPatterns = [
+      [0, 1, 2],
+      [3, 4, 5],
+      [6, 7, 8], // Rows
+      [0, 3, 6],
+      [1, 4, 7],
+      [2, 5, 8], // Columns
+      [0, 4, 8],
+      [2, 4, 6], // Diagonals
+    ];
+
+    for (const [a, b, c] of winPatterns) {
+      if (board[a] && board[a] === board[b] && board[b] === board[c]) {
+        return board[a];
       }
     }
+
     return null;
   }
 
-  // Add a player to a specific room
-  private addPlayerToRoom(roomId: string, socket: Socket): void {
-    this.gameRooms[roomId].push(socket.id);
-    socket.join(roomId);
+  cleanupRoom(roomId: string) {
+    delete this.gameStates[roomId];
   }
 
-  // Create a new room and add the player
-  private createNewRoom(socket: Socket): string {
-    const newRoomId = `room_${Date.now()}`;
-    this.gameRooms[newRoomId] = [socket.id];
-    socket.join(newRoomId);
-    return newRoomId;
-  }
+  cleanupRoomOfPlayer(socketId: string) {
+    for (const roomId in this.gameStates) {
+      const game = this.gameStates[roomId];
 
-  // Remove a player from a room when they disconnect
-  public removePlayer(socket: Socket): void {
-    for (let roomId in this.gameRooms) {
-      const roomPlayers = this.gameRooms[roomId];
-      const index = roomPlayers.indexOf(socket.id);
-
-      if (index !== -1) {
-        roomPlayers.splice(index, 1);
-        if (roomPlayers.length === 0) {
-          delete this.gameRooms[roomId];
-        }
+      if (game.players.includes(socketId)) {
+        delete this.gameStates[roomId];
+        console.log(
+          `Cleaned up game state for room: ${roomId} due to disconnect`
+        );
         break;
       }
     }
