@@ -10,8 +10,8 @@ interface GameModalProps {
 
 const gameModes = [
   { label: "Play Locally", value: GameMode.LOCAL_PLAYER },
-  { label: "Vs Computer", value: GameMode.COMPUTER },
-  { label: "Random Opponent", value: GameMode.ONLINE_PLAYER },
+  // { label: "Vs Computer", value: GameMode.COMPUTER },
+  // { label: "Random Opponent", value: GameMode.ONLINE_PLAYER },
   { label: "Invite a Friend", value: GameMode.INVITE_PLAYER },
 ];
 

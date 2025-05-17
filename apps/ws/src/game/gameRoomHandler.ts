@@ -41,10 +41,13 @@ export class GameMoveHandler {
     game.board[cellIndex] = playerSymbol;
 
     // Check for win or draw
-    const winner = this.checkWinner(game.board);
-    if (winner) {
+    const winnerSymbol = this.checkWinner(game.board);
+    let winnerId: string | null = null;
+
+    if (winnerSymbol) {
       game.isGameOver = true;
-      io.to(roomId).emit("game_over", { winner: playerSymbol });
+      winnerId = winnerSymbol === "X" ? game.players[0] : game.players[1];
+      io.to(roomId).emit("game_over", { winner: winnerId });
     } else if (game.board.every((cell) => cell !== "")) {
       game.isGameOver = true;
       io.to(roomId).emit("game_over", { winner: null }); // Draw
@@ -60,11 +63,11 @@ export class GameMoveHandler {
       game.board.slice(6, 9),
     ];
 
-    console.log(board2D)
+    // Emit updated game state
     io.to(roomId).emit("game_update", {
       board: board2D,
       playerTurn: game.currentPlayer,
-      winner: game.isGameOver ? winner : null,
+      winner: game.isGameOver ? winnerId : null, // ✅ fixed to emit socket ID
       players: {
         [game.players[0]]: "X",
         [game.players[1]]: "O",

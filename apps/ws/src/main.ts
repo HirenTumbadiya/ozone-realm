@@ -4,6 +4,16 @@ import dotenv from "dotenv";
 import { GameMoveHandler } from "./game/gameRoomHandler";
 import { GameRoomManager } from "./game/gameRoomManager";
 
+interface SignalData {
+  sdp: RTCSessionDescriptionInit;
+}
+
+interface IceCandidateData {
+  candidate: RTCIceCandidateInit;
+}
+
+type RoomId = string;
+
 // Load env variables
 dotenv.config();
 
@@ -28,11 +38,11 @@ io.use((socket: any, next) => {
 });
 
 io.on("connection", (socket: any) => {
-  socket.on("create_room", (roomId: string) => {
+  socket.on("create_room", (roomId: RoomId) => {
     gameRoomManager.createRoom(roomId, socket);
   });
 
-  socket.on("join_room", (roomId: string) => {
+  socket.on("join_room", (roomId: RoomId) => {
     const players = gameRoomManager.joinRoom(socket, roomId);
 
     if (players && players.length === 2) {
@@ -50,7 +60,7 @@ io.on("connection", (socket: any) => {
   // });
   // below code is to update the initial state wtih empty boxes
 
-  socket.on("start_game", ({ roomId }: { roomId: string }) => {
+  socket.on("start_game", ({ roomId }: { roomId: RoomId }) => {
     const room = gameRoomManager.getRoom(roomId);
     if (!room || room.length !== 2) return;
     const [player1, player2] = room;
@@ -76,9 +86,25 @@ io.on("connection", (socket: any) => {
     io.to(roomId).emit("start_game", initialGameState);
   });
 
-  socket.on("game_move", (roomId: string, cellIndex: number) => {
+  socket.on("game_move", (roomId: RoomId, cellIndex: number) => {
     console.log(roomId, cellIndex);
     gameMoveHandler.handleMove(io, socket, roomId, cellIndex);
+  });
+
+  socket.on("offer", (offer: SignalData, roomId: RoomId) => {
+    socket.to(roomId).emit("offer", offer);
+  });
+
+  socket.on("answer", (answer: SignalData, roomId: RoomId) => {
+    socket.to(roomId).emit("answer", answer);
+  });
+
+  socket.on("ice-candidate", (candidate: IceCandidateData, roomId: RoomId) => {
+    socket.to(roomId).emit("ice-candidate", candidate);
+  });
+
+  socket.on("start-call", (roomId: RoomId, callerInfo: any) => {
+    socket.to(roomId).emit("incoming-call", callerInfo);
   });
 
   socket.on("disconnect", () => {
