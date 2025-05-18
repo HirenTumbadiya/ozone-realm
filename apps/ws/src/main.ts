@@ -88,7 +88,6 @@ io.on("connection", (socket: any) => {
   });
 
   socket.on("game_move", (roomId: RoomId, cellIndex: number) => {
-    console.log(roomId, cellIndex);
     gameMoveHandler.handleMove(io, socket, roomId, cellIndex);
   });
 
@@ -120,5 +119,5 @@ io.on("connection", (socket: any) => {
 
 // Start the server
 server.listen(PORT, () => {
-  console.log(`WebSocket server running on http://localhost:${PORT}`);
+  console.log(`WebSocket server running on ${PORT}`);
 });

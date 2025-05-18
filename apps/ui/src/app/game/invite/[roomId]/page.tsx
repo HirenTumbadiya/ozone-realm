@@ -53,14 +53,14 @@ export default function Page() {
 
   useEffect(() => {
     if (roomId) {
-      socket = io("wss://ozone-realm.onrender.com");
+      const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL;
 
-      // if (!socketUrl) {
-      //   console.error("Socket URL is not defined in the environment variables");
-      //   return;
-      // }
+      if (!socketUrl) {
+        console.error("Socket URL is not defined in the environment variables");
+        return;
+      }
 
-      // socket = io(socketUrl);
+      socket = io(socketUrl);
 
       socket.on("connect", () => {
         socket.emit("join_room", roomId);
@@ -115,7 +115,7 @@ export default function Page() {
         socket.disconnect();
       };
     }
-  }, [roomId, localStream]);
+  }, [roomId]);
 
   const handleStartGame = () => {
     if (socket && opponentConnected) {
@@ -124,6 +124,7 @@ export default function Page() {
   };
 
   const handlePlayerMove = (row: number, col: number) => {
+    console.log("Player move:", row, col);
     const index = row * 3 + col; // Convert to 1D index
     socket.emit("game_move", roomId, index);
   };

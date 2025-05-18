@@ -20,7 +20,6 @@ export class GameMoveHandler {
   }
 
   handleMove(io: Server, socket: Socket, roomId: string, cellIndex: number) {
-    console.log("handlemove");
     const game = this.gameStates[roomId];
     if (!game || game.isGameOver) return;
 
@@ -111,9 +110,6 @@ export class GameMoveHandler {
 
       if (game.players.includes(socketId)) {
         delete this.gameStates[roomId];
-        console.log(
-          `Cleaned up game state for room: ${roomId} due to disconnect`
-        );
         break;
       }
     }
