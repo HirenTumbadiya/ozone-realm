@@ -20,10 +20,12 @@ dotenv.config();
 // Create HTTP server
 const server = http.createServer();
 
+const PORT = process.env.PORT || 8080;
+
 // Initialize Socket.io
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: process.env.ALLOWED_ORIGIN || "*",
     methods: ["GET", "POST"],
   },
 });
@@ -55,10 +57,6 @@ io.on("connection", (socket: any) => {
     }
   });
 
-  // socket.on("start_game", ({ roomId }: { roomId: string }) => {
-  //   io.to(roomId).emit("start_game");
-  // });
-  // below code is to update the initial state wtih empty boxes
 
   socket.on("start_game", ({ roomId }: { roomId: RoomId }) => {
     const room = gameRoomManager.getRoom(roomId);
@@ -108,8 +106,8 @@ io.on("connection", (socket: any) => {
   });
 
   socket.on("end_call", (roomId: RoomId) => {
-  socket.to(roomId).emit("end_call");
-});
+    socket.to(roomId).emit("end_call");
+  });
 
   socket.on("disconnect", () => {
     gameRoomManager.removePlayer(socket);
@@ -118,6 +116,6 @@ io.on("connection", (socket: any) => {
 });
 
 // Start the server
-server.listen(8080, () => {
-  console.log("WebSocket server running on http://localhost:8080");
+server.listen(PORT, () => {
+  console.log(`WebSocket server running on http://localhost:${PORT}`);
 });
