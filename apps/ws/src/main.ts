@@ -13,6 +13,10 @@ interface IceCandidateData {
 }
 
 type RoomId = string;
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://ozone-realm-ui.vercel.app",
+];
 
 // Load env variables
 dotenv.config();
@@ -29,7 +33,13 @@ const PORT = process.env.PORT || 8080;
 // Initialize Socket.io
 const io = new Server(server, {
   cors: {
-    origin: process.env.ALLOWED_ORIGIN || "*",
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST"],
   },
 });
