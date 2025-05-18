@@ -49,11 +49,18 @@ export default function Page() {
     players: {},
   });
 
-  console.log(remoteStream)
+  console.log(remoteStream);
 
   useEffect(() => {
     if (roomId) {
-      socket = io("http://localhost:8080");
+      const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL;
+
+      if (!socketUrl) {
+        console.error("Socket URL is not defined in the environment variables");
+        return;
+      }
+
+      socket = io(socketUrl);
 
       socket.on("connect", () => {
         socket.emit("join_room", roomId);
@@ -373,8 +380,13 @@ export default function Page() {
         <div>
           {callState === CallState.IDLE && !isCalling && (
             <button
+              disabled={!opponentConnected}
               onClick={startCall}
-              className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-2xl shadow-lg transition duration-300 ease-in-out"
+              className={`px-6 py-3 text-white font-semibold rounded-2xl shadow-lg transition duration-300 ease-in-out ${
+                opponentConnected
+                  ? "bg-green-600 hover:bg-green-700"
+                  : "bg-gray-400 cursor-not-allowed"
+              }`}
             >
               📞 Start Call
             </button>

@@ -32,6 +32,10 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
+        <head>
+          <link rel="manifest" href="/manifest.json" />
+          <meta name="theme-color" content="#4a90e2" />
+        </head>
         <body className={`${audiowide.className} ${orbitron.variable}`}>
           <RootLayoutClient>
             <ToastProvider />
