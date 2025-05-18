@@ -18,7 +18,11 @@ type RoomId = string;
 dotenv.config();
 
 // Create HTTP server
-const server = http.createServer();
+const server = http.createServer((req, res) => {
+  // Add a simple HTTP endpoint (Render needs this to detect the server)
+  res.writeHead(200, { "Content-Type": "text/plain" });
+  res.end("WebSocket server running");
+});
 
 const PORT = process.env.PORT || 8080;
 
@@ -56,7 +60,6 @@ io.on("connection", (socket: any) => {
       io.to(roomId).emit("message", "Game ready to start!");
     }
   });
-
 
   socket.on("start_game", ({ roomId }: { roomId: RoomId }) => {
     const room = gameRoomManager.getRoom(roomId);
