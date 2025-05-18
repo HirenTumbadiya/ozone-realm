@@ -107,6 +107,10 @@ io.on("connection", (socket: any) => {
     socket.to(roomId).emit("incoming-call", callerInfo);
   });
 
+  socket.on("end_call", (roomId: RoomId) => {
+  socket.to(roomId).emit("end_call");
+});
+
   socket.on("disconnect", () => {
     gameRoomManager.removePlayer(socket);
     gameMoveHandler.cleanupRoomOfPlayer(socket.id); // Optional: implement this

@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import GameBoard from "@/components/Games/GameBoard";
 import io from "socket.io-client";
-
 import { Socket } from "socket.io-client";
+import { toast } from "react-toastify";
 
 let socket: Socket;
 
@@ -14,6 +14,12 @@ enum CellState {
   O = "O",
 }
 
+enum CallState {
+  IDLE = "IDLE",
+  RINGING = "RINGING",
+  IN_CALL = "IN_CALL",
+}
+
 export default function Page() {
   const { roomId } = useParams();
   const [opponentConnected, setOpponentConnected] = useState(false);
@@ -21,19 +27,19 @@ export default function Page() {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [isCalling, setIsCalling] = useState(false);
+  const [callState, setCallState] = useState<CallState>(CallState.IDLE);
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const [incomingOffer, setIncomingOffer] =
     useState<RTCSessionDescriptionInit | null>(null);
+  const [isMuted, setIsMuted] = useState(false);
 
   interface GameState {
     playerTurn: string;
     board: CellState[][];
     winner?: string;
-    players: {
-      [socketId: string]: "X" | "O";
-    };
+    players: { [socketId: string]: "X" | "O" };
   }
 
   const [gameState, setGameState] = useState<GameState>({
@@ -42,6 +48,8 @@ export default function Page() {
     winner: undefined,
     players: {},
   });
+
+  console.log(remoteStream)
 
   useEffect(() => {
     if (roomId) {
@@ -64,8 +72,7 @@ export default function Page() {
         setGameState(newGameState);
       });
 
-      socket.on("game_over", (data) => {
-        console.log("Game Over:", data);
+      socket.on("game_over", () => {
         setGameStarted(false);
       });
 
@@ -73,15 +80,35 @@ export default function Page() {
       socket.on("answer", handleAnswer);
       socket.on("ice-candidate", handleIceCandidate);
 
-      socket.on("offer", (offer: RTCSessionDescriptionInit) => {
-        setIncomingOffer(offer);
+      socket.on("end_call", () => {
+        peerConnectionRef.current?.close();
+        peerConnectionRef.current = null;
+
+        if (localStream) {
+          localStream.getTracks().forEach((track) => track.stop());
+          setLocalStream(null);
+        }
+
+        setRemoteStream(null);
+        setIsCalling(false);
+        setCallState(CallState.IDLE);
+        toast("Call ended by the other user");
       });
 
+      // ⬇️ CLEANUP
       return () => {
+        socket.off("opponent_connected");
+        socket.off("start_game");
+        socket.off("game_update");
+        socket.off("game_over");
+        socket.off("offer");
+        socket.off("answer");
+        socket.off("ice-candidate");
+        socket.off("end_call");
         socket.disconnect();
       };
     }
-  }, [roomId]);
+  }, [roomId, localStream]);
 
   const handleStartGame = () => {
     if (socket && opponentConnected) {
@@ -94,10 +121,7 @@ export default function Page() {
     socket.emit("game_move", roomId, index);
   };
 
-  console.log(gameState, socket?.id);
-
   useEffect(() => {
-    // Access media devices (camera and microphone)
     const getMedia = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -116,41 +140,16 @@ export default function Page() {
     getMedia();
   }, []);
 
-  const handleOffer = async (offer: RTCSessionDescriptionInit) => {
-    const peerConnection = new RTCPeerConnection();
-    peerConnectionRef.current = peerConnection;
-
-    setIsCalling(true); // ✅ Add this to update buttons on receiver side
-
-    peerConnection.onicecandidate = (event) => {
-      if (event.candidate) {
-        socket.emit("ice-candidate", event.candidate, roomId);
-      }
-    };
-
-    peerConnection.ontrack = (event) => {
-      if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = event.streams[0];
-        setRemoteStream(event.streams[0]);
-      }
-    };
-
-    localStream?.getTracks().forEach((track) => {
-      peerConnection.addTrack(track, localStream!);
-    });
-
-    await peerConnection.setRemoteDescription(offer);
-
-    const answer = await peerConnection.createAnswer();
-    await peerConnection.setLocalDescription(answer);
-
-    socket.emit("answer", answer, roomId);
+  const handleOffer = (offer: RTCSessionDescriptionInit) => {
+    setIncomingOffer(offer);
+    setCallState(CallState.RINGING); // Set the state to RINGING when an offer is received
   };
 
   const handleAnswer = (answer: RTCSessionDescriptionInit) => {
     const peerConnection = peerConnectionRef.current;
     if (peerConnection) {
       peerConnection.setRemoteDescription(answer);
+      setCallState(CallState.IN_CALL); // Update the state to IN_CALL after answer
     }
   };
 
@@ -161,7 +160,35 @@ export default function Page() {
     }
   };
 
-  const startCall = () => {
+  const getMedia = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true,
+      });
+
+      setLocalStream(stream);
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = stream;
+      }
+    } catch (err) {
+      console.error("Error accessing media devices:", err);
+      toast.error(
+        "Unable to access your camera or microphone. Please check permissions."
+      );
+    }
+  };
+
+  const startCall = async () => {
+    if (!localStream) {
+      await getMedia();
+    }
+
+    if (!localStream) {
+      toast.error("No video stream available!, Please Try again.");
+      return;
+    }
+
     const peerConnection = new RTCPeerConnection();
     peerConnectionRef.current = peerConnection;
 
@@ -178,32 +205,52 @@ export default function Page() {
       }
     };
 
-    localStream?.getTracks().forEach((track) => {
+    // Add local tracks
+    localStream.getTracks().forEach((track) => {
       peerConnection.addTrack(track, localStream!);
     });
 
     peerConnection.createOffer().then((offer) => {
       peerConnection.setLocalDescription(offer);
       socket.emit("offer", offer, roomId);
+      setCallState(CallState.IN_CALL); // Set call state to IN_CALL
     });
 
     setIsCalling(true);
   };
-
   const endCall = () => {
-    peerConnectionRef.current?.close();
-    setRemoteStream(null);
-    setLocalStream(null);
-    setIsCalling(false);
+    // Close the peer connection
+    if (peerConnectionRef.current) {
+      peerConnectionRef.current.close();
+      peerConnectionRef.current = null;
+    }
 
-    localStream?.getTracks().forEach((track) => track.stop());
-    socket.emit("end_call", roomId); // Notify peer to cleanup
+    // Stop local media tracks
+    if (localStream) {
+      localStream.getTracks().forEach((track) => track.stop());
+      setLocalStream(null);
+    }
+
+    // Clean up remote stream
+    setRemoteStream(null);
+
+    // Reset call states
+    setIsCalling(false);
+    setCallState(CallState.IDLE);
+
+    // Notify the other peer
+    socket.emit("end_call", roomId);
+
+    toast("Call ended successfully");
   };
+
   const toggleMute = () => {
     if (localStream) {
       const audioTrack = localStream.getAudioTracks()[0];
       if (audioTrack) {
-        audioTrack.enabled = !audioTrack.enabled;
+        const newMutedState = !audioTrack.enabled;
+        audioTrack.enabled = newMutedState;
+        setIsMuted(!newMutedState);
       }
     }
   };
@@ -245,6 +292,8 @@ export default function Page() {
     socket.emit("answer", answer, roomId);
 
     setIncomingOffer(null); // clear the offer
+    setCallState(CallState.IN_CALL);
+    setIsCalling(true);
   };
 
   return (
@@ -258,11 +307,15 @@ export default function Page() {
         <div
           className={`w-full max-w-[200px] aspect-video bg-black rounded-md relative shadow-md ${gameStarted && socket?.id && socket?.id != gameState?.playerTurn ? `border-2 border-pink-700 animate-pulse` : ``}`}
         >
-          <span className="absolute bottom-1 left-2 text-white text-xs">
-            <video ref={remoteVideoRef} autoPlay playsInline />
+          <span className="absolute w-full h-full text-white text-xs">
+            <video
+              className="w-full h-full object-cover rounded-md"
+              ref={remoteVideoRef}
+              autoPlay
+              playsInline
+            />
           </span>
           <span className="absolute bottom-1 left-2 text-white text-xs flex justify-between">
-            {" "}
             {opponentConnected ? "Opponent Connected" : "Waiting..."}
           </span>
         </div>
@@ -279,8 +332,14 @@ export default function Page() {
         <div
           className={`w-full max-w-[200px] aspect-video bg-gray-800 rounded-md relative shadow-md ${gameStarted && socket?.id && socket?.id == gameState?.playerTurn ? `border-2 border-pink-700 animate-pulse` : ``}`}
         >
-          <span className="absolute bottom-1 left-2 text-white text-xs">
-            <video ref={localVideoRef} autoPlay muted playsInline />
+          <span className="absolute w-full h-full text-white text-xs">
+            <video
+              className="w-full h-full object-cover rounded-md"
+              ref={localVideoRef}
+              autoPlay
+              muted
+              playsInline
+            />
           </span>
           <span className="absolute bottom-1 left-2 text-white text-xs flex justify-between">
             You
@@ -312,19 +371,28 @@ export default function Page() {
           </button>
         )}
         <div>
-          {!isCalling ? (
+          {callState === CallState.IDLE && !isCalling && (
             <button
               onClick={startCall}
               className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-2xl shadow-lg transition duration-300 ease-in-out"
             >
               📞 Start Call
             </button>
-          ) : (
+          )}
+          {callState === CallState.IN_CALL && (
             <button
               onClick={endCall}
               className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-2xl shadow-lg transition duration-300 ease-in-out"
             >
               🔴 End Call
+            </button>
+          )}
+          {callState === CallState.RINGING && (
+            <button
+              onClick={() => handleReceiveCall(incomingOffer!)}
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-2xl shadow-lg transition duration-300 ease-in-out"
+            >
+              📞 Receive Call
             </button>
           )}
         </div>
@@ -333,12 +401,7 @@ export default function Page() {
             onClick={toggleMute}
             className="px-6 py-3 bg-amber-400 hover:bg-amber-700 text-white font-semibold rounded-2xl shadow-lg transition duration-300 ease-in-out"
           >
-            {localStream?.getAudioTracks()[0]?.enabled ? "Mute" : "Unmute"}
-          </button>
-        )}
-        {incomingOffer && (
-          <button onClick={() => handleReceiveCall(incomingOffer)}>
-            Receive Call
+            {isMuted ? "Unmute" : "Mute"}
           </button>
         )}
       </footer>

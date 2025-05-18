@@ -1,7 +1,8 @@
-"use client"
+"use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSocket } from "@/hooks/useSocket";
+import { toast } from "react-toastify";
 
 export default function InviteGame() {
   const router = useRouter();
@@ -25,9 +26,9 @@ export default function InviteGame() {
   const handleCopyLink = () => {
     if (roomId) {
       navigator.clipboard.writeText(
-        `${window.location.origin}/game/join/${roomId}`
+        `${window.location.origin}/game/invite/${roomId}`
       );
-      alert("Invite link copied to clipboard!");
+      toast.success("Invite link copied to clipboard!");
       router.push(`/game/invite/${roomId}`);
     }
   };
@@ -41,7 +42,10 @@ export default function InviteGame() {
       {roomId && (
         <>
           <div className="mb-4">
-            <p className="font-medium text-indigo-600 flex flex-wrap wrap-normal px-4" style={{overflowWrap: "anywhere"}}>
+            <p
+              className="font-medium text-indigo-600 flex flex-wrap wrap-normal px-4"
+              style={{ overflowWrap: "anywhere" }}
+            >
               {`${window.location.origin}/game/join/${roomId}`}
             </p>
           </div>

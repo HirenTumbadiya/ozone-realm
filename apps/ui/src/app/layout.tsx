@@ -3,6 +3,7 @@ import { Audiowide, Orbitron } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import RootLayoutClient from "@/client/RootLayoutClient";
+import ToastProvider from "@/providers/ToastProvider";
 
 const orbitron = Orbitron({
   subsets: ["latin"],
@@ -32,7 +33,10 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body className={`${audiowide.className} ${orbitron.variable}`}>
-          <RootLayoutClient>{children}</RootLayoutClient>
+          <RootLayoutClient>
+            <ToastProvider />
+            {children}
+          </RootLayoutClient>
         </body>
       </html>
     </ClerkProvider>
