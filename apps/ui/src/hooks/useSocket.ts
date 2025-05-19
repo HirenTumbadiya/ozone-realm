@@ -13,6 +13,8 @@ export function useSocket() {
       if (!token) return;
 
       const s = getSocket({token});
+      if (!s) return;
+
       s.connect();
 
       s.on("message", (msg: string) => {
