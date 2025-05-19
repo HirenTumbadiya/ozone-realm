@@ -11,7 +11,14 @@ export const getSocket = ({ token }: { token: string }) => {
     //   }
     // );
 
-    socket = io("http://localhost:8080", {
+    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL;
+
+    if (!socketUrl) {
+      console.error("Socket URL is not defined in the environment variables");
+      return;
+    }
+
+    socket = io(socketUrl, {
       auth: { token },
       autoConnect: false,
     });
