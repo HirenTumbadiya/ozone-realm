@@ -18,7 +18,7 @@ export const getSocket = ({ token }: { token: string }) => {
       return;
     }
 
-    socket = io(socketUrl, {
+    socket = io("https://ozone-realm.onrender.com", {
       auth: { token },
       autoConnect: false,
     });

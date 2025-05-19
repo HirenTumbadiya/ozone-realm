@@ -60,7 +60,7 @@ export default function Page() {
         return;
       }
 
-      socket = io(socketUrl);
+      socket = io("https://ozone-realm.onrender.com");
 
       socket.on("connect", () => {
         socket.emit("join_room", roomId);
