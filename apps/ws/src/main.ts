@@ -1,8 +1,11 @@
 import { Server } from "socket.io";
+import express from "express";
 import http from "http";
 import dotenv from "dotenv";
 import { GameMoveHandler } from "./game/gameRoomHandler";
 import { GameRoomManager } from "./game/gameRoomManager";
+
+const cors = require('cors');
 
 interface SignalData {
   sdp: RTCSessionDescriptionInit;
@@ -21,11 +24,20 @@ const allowedOrigins = [
 // Load env variables
 dotenv.config();
 
-// Create HTTP server
-const server = http.createServer((req, res) => {
-  // Add a simple HTTP endpoint (Render needs this to detect the server)
-  res.writeHead(200, { "Content-Type": "text/plain" });
-  res.end("WebSocket server running");
+const app = express();
+
+// Enable CORS for your frontend's domain
+app.use(
+  cors({
+    origin: "https://ozone-realm-ui.vercel.app",
+    credentials: true,
+  })
+);
+
+const server = http.createServer(app);
+
+app.get("/", (req, res) => {
+  res.send("WebSocket server running");
 });
 
 const PORT = process.env.PORT || 8080;
