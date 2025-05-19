@@ -16,6 +16,7 @@
     "@clerk/express": "^1.4.14",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
+    "express": "^5.1.0",
     "nodemon": "^3.1.10",
     "socket.io": "^4.8.1"
   },
